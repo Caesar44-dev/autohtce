@@ -1,0 +1,16 @@
+
+py -m venv venv
+
+.\venv\Scripts\activate
+
+.\venv\Scripts\deactivate
+
+pip install -r requirements.txt
+
+pip freeze > requirements.txt
+
+pyinstaller --onefile autohtce.py
+
+pip install pyinstaller
+
+pip install 
