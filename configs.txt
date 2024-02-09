@@ -1,0 +1,9 @@
+# resolution
+width = 1200
+height = 800
+
+# compress quality
+quality = 20
+
+# chrome extensions path
+extensions_path = C:\Users\zynti\AppData\Local\Google\Chrome\User Data\Default\Extensions\bihmplhobchoageeokmgbdihknkjbknd\5.0.18_0

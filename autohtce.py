@@ -6,13 +6,34 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
-from tkinter import TclError, filedialog, Tk
+from tkinter import filedialog, Tk
 from selenium import webdriver
 import time
 from PIL import Image
 from reportlab.pdfgen import canvas
 from io import BytesIO
+
+
+def get_configs(filename="configs.txt", separator="="):
+    config = {}
+    try:
+        with open(filename, "r") as file:
+            for line in file:
+                if not line.startswith("#"):
+                    if separator in line:
+                        name, value = line.strip().split(separator, 1)
+                        config[name.strip()] = value.strip()
+
+    except FileNotFoundError:
+        print(f" - Error: No se encontró el archivo de configuración: {filename}")
+        logging.error(f"Error: No se encontró el archivo de configuración: {filename}")
+    except Exception as e:
+        print(f" - Error al leer la configuración: {e}")
+        logging.error(f"Error al leer la configuración: {e}")
+
+    return config
 
 
 def configure_logging():
@@ -27,23 +48,28 @@ def configure_logging():
         raise
 
 
-def setup():
+def setup(width, height, extensions_path):
     try:
         options = Options()
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
+        # options.add_argument("--disable-extensions")
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
+        # options.add_argument("--disable-gpu")
+        # options.add_argument("--disable-infobars")
+        # options.add_argument("--disable-notifications")
+        # options.add_argument("--disable-audio")
+        # options.add_argument("--log-level=3")
         options.add_argument("--start-maximized")
-        options.add_argument("--disable-extensions")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--disable-infobars")
-        options.add_argument("--disable-notifications")
-        options.add_argument("--window-size=1920,1080")
-        options.add_argument("--disable-audio")
-        options.add_argument("--log-level=3")
+        options.add_argument(f"--window-size={width},{height}")
+        options.add_argument(f"--load-extension={extensions_path}")
 
         service = ChromeService(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
+        # time.sleep(2)
+        # driver.switch_to.window(driver.window_handles[1])
+        # time.sleep(2)
+        # driver.close()
         time.sleep(2)
         logging.info("Inicialización exitosa.")
         return driver, service
@@ -67,10 +93,13 @@ def initialize(driver):
         raise
 
 
-def process(driver, html_file_path):
+def process(driver, html_file_path, width, height, quality):
     try:
         logging.info("Iniciando la captura autamatica.")
         print(" - Iniciando la captura autamatica.")
+
+        driver.switch_to.window(driver.window_handles[0])
+        time.sleep(2)
 
         nav_folder_text = "Wiring Diagrams-All"
         nav_table_iid = "files"
@@ -80,47 +109,39 @@ def process(driver, html_file_path):
         file_name = os.path.splitext(os.path.basename(html_file_path))[0]
         html_file_directory = os.path.dirname(html_file_path)
 
-        time.sleep(random.randint(1, 2))
-
-        take_screenshot(driver, "home.png")
-        compress_image("home.png", "compressed_home.jpeg")
+        take_screenshot(driver, "home.png", (width, height))
+        compress_image("home.png", "compressed_home.jpeg", quality)
 
         time.sleep(random.randint(1, 2))
 
         nav_folder(driver, nav_folder_text)
-        time.sleep(random.randint(1, 2))
 
         nav_table(driver, nav_table_iid)
-        time.sleep(random.randint(1, 2))
 
         nav_page_a(driver, nav_page_a_css)
-        time.sleep(random.randint(1, 2))
 
-        take_screenshot(driver, "page1.png")
-        compress_image("page1.png", "compressed_page1.jpeg")
-        time.sleep(random.randint(1, 2))
+        take_screenshot(driver, "page1.png", (width, height))
+        compress_image("page1.png", "compressed_page1.jpeg", quality)
 
         driver.back()
         time.sleep(random.randint(1, 2))
         driver.back()
-        time.sleep(random.randint(1, 2))
 
         nav_folder(driver, nav_folder_text2)
-        time.sleep(random.randint(1, 2))
 
         nav_table(driver, nav_table_iid)
-        time.sleep(random.randint(1, 2))
 
-        take_screenshot(driver, "page2.png")
-        compress_image("page2.png", "compressed_page2.jpeg")
+        take_screenshot(driver, "page2.png", (width, height))
+        compress_image("page2.png", "compressed_page2.jpeg", quality)
+        
         time.sleep(random.randint(1, 2))
 
         create_pdf(
             ["compressed_home.jpeg", "compressed_page1.jpeg", "compressed_page2.jpeg"],
             file_name,
             html_file_directory,
-            width=1920,
-            height=1080,
+            width=width,
+            height=height,
         )
 
         remove_files(
@@ -133,6 +154,16 @@ def process(driver, html_file_path):
                 "compressed_page2.jpeg",
             ]
         )
+
+        time.sleep(random.randint(1, 2))
+        
+        url = "https://www.google.com/imghp"
+        driver.get(url)
+        search_box = driver.find_element("name", "q")
+        search_text = file_name
+        search_box.send_keys(search_text + Keys.RETURN)
+        logging.info("Busqueda completada.")
+        print(" - Busqueda completada.")
 
     except Exception as e:
         logging.error(f"Error durante el procesamiento: {e}")
@@ -206,7 +237,7 @@ def nav_page_a(driver, selector_css):
         raise
 
 
-def take_screenshot(driver, file_name, window_size=(1920, 1080)):
+def take_screenshot(driver, file_name, window_size):
     try:
         driver.set_window_size(*window_size)
         driver.save_screenshot(file_name)
@@ -235,7 +266,7 @@ def select_html_file():
         raise
 
 
-def compress_image(image_path, output_path, quality=20):
+def compress_image(image_path, output_path, quality):
     try:
         image = Image.open(image_path)
         if image.mode == "RGBA":
@@ -284,12 +315,17 @@ def remove_files(file_list):
 
 
 if __name__ == "__main__":
+    configs = get_configs()
+    width = int(configs.get("width"))
+    height = int(configs.get("height"))
+    quality = int(configs.get("quality"))
+    extensions_path = configs.get("extensions_path")
     configure_logging()
     while True:
         try:
-            driver, service = setup()
+            driver, service = setup(width, height, extensions_path)
             html_file_path = initialize(driver)
-            process(driver, html_file_path)
+            process(driver, html_file_path, width, height, quality)
         except Exception as e:
             logging.error(f"Error general: {e}")
             finalize(driver, service)
