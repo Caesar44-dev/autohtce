@@ -93,7 +93,7 @@ def initialize(driver):
         raise
 
 
-def process(driver, html_file_path, width, height, quality):
+def process(driver, html_file_path, width, height, quality, remove_text):
     try:
         logging.info("Iniciando la captura autamatica.")
         print(" - Iniciando la captura autamatica.")
@@ -133,7 +133,7 @@ def process(driver, html_file_path, width, height, quality):
 
         take_screenshot(driver, "page2.png", (width, height))
         compress_image("page2.png", "compressed_page2.jpeg", quality)
-        
+
         time.sleep(random.randint(1, 2))
 
         create_pdf(
@@ -156,11 +156,16 @@ def process(driver, html_file_path, width, height, quality):
         )
 
         time.sleep(random.randint(1, 2))
-        
+
         url = "https://www.google.com/imghp"
         driver.get(url)
         search_box = driver.find_element("name", "q")
-        search_text = file_name
+
+        file_name_lower = file_name.lower()
+        remove_text_lower = remove_text.lower()
+
+        search_text = file_name_lower.replace(remove_text_lower, "")
+
         search_box.send_keys(search_text + Keys.RETURN)
         logging.info("Busqueda completada.")
         print(" - Busqueda completada.")
@@ -320,12 +325,13 @@ if __name__ == "__main__":
     height = int(configs.get("height"))
     quality = int(configs.get("quality"))
     extensions_path = configs.get("extensions_path")
+    remove_text = configs.get("remove_text")
     configure_logging()
     while True:
         try:
             driver, service = setup(width, height, extensions_path)
             html_file_path = initialize(driver)
-            process(driver, html_file_path, width, height, quality)
+            process(driver, html_file_path, width, height, quality, remove_text)
         except Exception as e:
             logging.error(f"Error general: {e}")
             finalize(driver, service)
