@@ -542,4 +542,5 @@ if __name__ == "__main__":
         #     finalize(driver, service)
 
         if not restart():
+            finalize(driver, service)
             break
