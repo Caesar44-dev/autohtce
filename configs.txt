@@ -5,6 +5,14 @@ height = 1080
 # compress quality
 quality = 20
 
+# chrome download configs
+chromedrive_url = https://storage.googleapis.com/chrome-for-testing-public/126.0.6478.182/win64/chromedriver-win64.zip
+base_temp_dir = drivers
+zip_path = chromedriver-win64.zip
+extract_dir = chromedriver-win64
+sub_dir_name = chromedriver-win64
+executable_name = chromedriver.exe
+
 # chrome extensions path
 extensions_path = C:\Users\zynti\AppData\Local\Google\Chrome\User Data\Default\Extensions\bihmplhobchoageeokmgbdihknkjbknd\5.0.18_0
 
