@@ -506,7 +506,6 @@ def download_image_and_remove_background(
         raise
 
 
-
 if __name__ == "__main__":
     configs = get_configs()
     width = int(configs.get("width"))
