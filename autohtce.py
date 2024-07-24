@@ -511,7 +511,6 @@ if __name__ == "__main__":
     width = int(configs.get("width"))
     height = int(configs.get("height"))
     quality = int(configs.get("quality"))
-    extensions_path = str(configs.get("extensions_path"))
 
     base_temp_dir = str(configs.get("base_temp_dir"))
     chromedrive_url = str(configs.get("chromedrive_url"))
