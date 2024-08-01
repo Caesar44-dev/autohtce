@@ -61,6 +61,7 @@ def setup(
     extract_dir_name,
     sub_dir_name,
     executable_name,
+    extensions_path
 ):
     temp_dir = base_temp_dir
     zip_file_path = os.path.join(temp_dir, zip_filename)
@@ -90,6 +91,7 @@ def setup(
     options = Options()
     options.add_argument("--start-maximized")
     options.add_argument(f"--window-size={width},{height}")
+    options.add_argument(f"--load-extension={extensions_path}")
 
     logging.info("Configurando el servicio de ChromeDriver...")
 
@@ -436,6 +438,7 @@ def download_image_and_remove_background(
         file_name_lower = file_name.lower()
         remove_text_lower = remove_text.lower()
         search_text = file_name_lower.replace(remove_text_lower, "")
+        img_text = file_name.replace(remove_text, "")
 
         search_box.send_keys(search_text + Keys.RETURN)
         logging.info("Busqueda completada.")
@@ -494,7 +497,7 @@ def download_image_and_remove_background(
 
         img_no_bg = remove(img)
 
-        no_bg_image_path = os.path.join(save_directory, file_name + ".png")
+        no_bg_image_path = os.path.join(save_directory, img_text + ".png")
         img_no_bg.save(no_bg_image_path)
 
         print(f" - Imagen guardada en {no_bg_image_path}")
@@ -521,6 +524,8 @@ if __name__ == "__main__":
 
     remove_text = str(configs.get("remove_text"))
 
+    extensions_path = configs.get("extensions_path")
+    
     configure_logging()
 
     while True:
@@ -534,6 +539,7 @@ if __name__ == "__main__":
                 extract_dir,
                 sub_dir_name,
                 executable_name,
+                extensions_path
             )
             html_file_path = initialize(driver)
             process(driver, html_file_path, width, height, quality, remove_text)
