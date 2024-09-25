@@ -61,7 +61,6 @@ def setup(
     extract_dir_name,
     sub_dir_name,
     executable_name,
-    extensions_path
 ):
     temp_dir = base_temp_dir
     zip_file_path = os.path.join(temp_dir, zip_filename)
@@ -91,7 +90,6 @@ def setup(
     options = Options()
     options.add_argument("--start-maximized")
     options.add_argument(f"--window-size={width},{height}")
-    options.add_argument(f"--load-extension={extensions_path}")
 
     logging.info("Configurando el servicio de ChromeDriver...")
 
@@ -106,101 +104,203 @@ def setup(
         raise
 
 
+# def initialize(driver):
+#     try:
+#         logging.info("Selecionando archivo html.")
+#         print(" - Porfavor selecione el archivo html a capturar.")
+#         html_file_path = select_html_file()
+#         logging.info("Selecionando archivo html.")
+#         driver.get(html_file_path)
+#         time.sleep(2)
+#         return html_file_path
+#     except Exception as e:
+#         logging.error(f"Error durante la Inicializacion: {e}")
+#         # finalize(driver, service)
+#         raise
+
+
 def initialize(driver):
     try:
-        logging.info("Selecionando archivo html.")
-        print(" - Porfavor selecione el archivo html a capturar.")
-        html_file_path = select_html_file()
-        logging.info("Selecionando archivo html.")
-        driver.get(html_file_path)
-        time.sleep(2)
-        return html_file_path
-    except Exception as e:
-        logging.error(f"Error durante la Inicializacion: {e}")
-        # finalize(driver, service)
-        raise
+        logging.info("Seleccionando la carpeta principal.")
+        print(" - Por favor, selecciona la carpeta principal (ej: diagramas).")
 
+        main_folder_path = select_folder()
 
-def process(driver, html_file_path, width, height, quality, remove_text):
-    try:
-        logging.info("Iniciando la captura autamatica.")
-        print(" - Iniciando la captura autamatica.")
+        html_files = []
 
-        driver.switch_to.window(driver.window_handles[0])
-        time.sleep(2)
+        for subdir in next(os.walk(main_folder_path))[1]:
+            subdir_path = os.path.join(main_folder_path, subdir)
 
-        nav_folder_text = "Wiring Diagrams-All"
-        nav_table_iid = "files"
-        nav_page_a_css = "span.clsFig a.clsExtGraphicLink"
-        nav_folder_text2 = "Images"
-
-        file_name = os.path.splitext(os.path.basename(html_file_path))[0]
-        html_file_directory = os.path.dirname(html_file_path)
-
-        take_screenshot(driver, "home.png", (width, height))
-        compress_image("home.png", "compressed_home.jpeg", quality)
-
-        time.sleep(random.randint(1, 2))
-
-        nav_folder(driver, nav_folder_text)
-
-        nav_table(driver, nav_table_iid)
-
-        nav_page_a(driver, nav_page_a_css)
-
-        take_screenshot(driver, "page1.png", (width, height))
-        compress_image("page1.png", "compressed_page1.jpeg", quality)
-
-        driver.back()
-        time.sleep(random.randint(1, 2))
-        driver.back()
-
-        nav_folder(driver, nav_folder_text2)
-
-        nav_table_02(driver, nav_table_iid)
-
-        take_screenshot(driver, "page2.png", (width, height))
-        compress_image("page2.png", "compressed_page2.jpeg", quality)
-
-        time.sleep(random.randint(1, 2))
-
-        create_pdf(
-            ["compressed_home.jpeg", "compressed_page1.jpeg", "compressed_page2.jpeg"],
-            file_name,
-            html_file_directory,
-            width=width,
-            height=height,
-        )
-
-        remove_files(
-            [
-                "home.png",
-                "page1.png",
-                "page2.png",
-                "compressed_home.jpeg",
-                "compressed_page1.jpeg",
-                "compressed_page2.jpeg",
+            files_in_subdir = [
+                os.path.join(subdir_path, f) for f in os.listdir(subdir_path) 
+                if f.endswith(".html") and os.path.isfile(os.path.join(subdir_path, f))
             ]
-        )
 
-        time.sleep(random.randint(1, 2))
+            html_files.extend(files_in_subdir)
 
-        new_file_name = "Home.html"
+        if not html_files:
+            print(" - No se encontraron archivos HTML en la carpeta seleccionada.")
+            return []
 
-        dir_name = os.path.dirname(html_file_path)
-        output_zip_path = os.path.join(dir_name, file_name + ".zip")
+        logging.info(f"Archivos HTML encontrados: {html_files}")
+        print(f" - Archivos HTML encontrados: {html_files}")
 
-        compress_file_and_folder(html_file_path, new_file_name, output_zip_path)
+        return html_files
 
-        time.sleep(random.randint(1, 2))
+    except Exception as e:
+        logging.error(f"Error durante la inicialización: {e}")
+        raise
+    
 
-        download_image_and_remove_background(
-            file_name, html_file_directory, remove_text, driver
-        )
+# def process(driver, html_file_path, width, height, quality, remove_text):
+#     try:
+#         logging.info("Iniciando la captura autamatica.")
+#         print(" - Iniciando la captura autamatica.")
+
+#         driver.switch_to.window(driver.window_handles[0])
+#         time.sleep(2)
+
+#         nav_folder_text = "Wiring Diagrams-All"
+#         nav_table_iid = "files"
+#         nav_page_a_css = "span.clsFig a.clsExtGraphicLink"
+#         nav_folder_text2 = "Images"
+
+#         file_name = os.path.splitext(os.path.basename(html_file_path))[0]
+#         html_file_directory = os.path.dirname(html_file_path)
+
+#         take_screenshot(driver, "home.png", (width, height))
+#         compress_image("home.png", "compressed_home.jpeg", quality)
+
+#         time.sleep(random.randint(1, 2))
+
+#         nav_folder(driver, nav_folder_text)
+
+#         nav_table(driver, nav_table_iid)
+
+#         nav_page_a(driver, nav_page_a_css)
+
+#         take_screenshot(driver, "page1.png", (width, height))
+#         compress_image("page1.png", "compressed_page1.jpeg", quality)
+
+#         driver.back()
+#         time.sleep(random.randint(1, 2))
+#         driver.back()
+
+#         nav_folder(driver, nav_folder_text2)
+
+#         nav_table_02(driver, nav_table_iid)
+
+#         take_screenshot(driver, "page2.png", (width, height))
+#         compress_image("page2.png", "compressed_page2.jpeg", quality)
+
+#         time.sleep(random.randint(1, 2))
+
+#         create_pdf(
+#             ["compressed_home.jpeg", "compressed_page1.jpeg", "compressed_page2.jpeg"],
+#             file_name,
+#             html_file_directory,
+#             width=width,
+#             height=height,
+#         )
+
+#         remove_files(
+#             [
+#                 "home.png",
+#                 "page1.png",
+#                 "page2.png",
+#                 "compressed_home.jpeg",
+#                 "compressed_page1.jpeg",
+#                 "compressed_page2.jpeg",
+#             ]
+#         )
+
+#         time.sleep(random.randint(1, 2))
+
+#         new_file_name = "Home.html"
+
+#         dir_name = os.path.dirname(html_file_path)
+#         output_zip_path = os.path.join(dir_name, file_name + ".zip")
+
+#         compress_file_and_folder(html_file_path, new_file_name, output_zip_path)
+
+#         time.sleep(random.randint(1, 2))
+
+#         download_image_and_remove_background(
+#             file_name, html_file_directory, remove_text, driver
+#         )
+
+#     except Exception as e:
+#         logging.error(f"Error durante el procesamiento: {e}")
+#         # finalize(driver, service)
+#         raise
+
+
+def process(driver, html_files, width, height, quality, remove_text):
+    try:
+        logging.info("Iniciando la captura automática.")
+        print(" - Iniciando la captura automática.")
+
+        for html_file_path in html_files:
+            logging.info(f"Procesando archivo HTML: {html_file_path}")
+            print(f" - Procesando archivo HTML: {html_file_path}")
+            
+            driver.get(f"file://{html_file_path}")
+            time.sleep(2)
+
+            file_name = os.path.splitext(os.path.basename(html_file_path))[0]
+            html_file_directory = os.path.dirname(html_file_path)
+
+            take_screenshot(driver, "home.png", (width, height))
+            compress_image("home.png", "compressed_home.jpeg", quality)
+
+            time.sleep(random.randint(1, 2))
+
+            nav_folder(driver, "Wiring Diagrams-All")
+            nav_table(driver, "files")
+            nav_page_a(driver, "span.clsFig a.clsExtGraphicLink")
+
+            take_screenshot(driver, "page1.png", (width, height))
+            compress_image("page1.png", "compressed_page1.jpeg", quality)
+
+            driver.back()
+            time.sleep(random.randint(1, 2))
+            driver.back()
+
+            nav_folder(driver, "Images")
+            nav_table_02(driver, "files")
+
+            take_screenshot(driver, "page2.png", (width, height))
+            compress_image("page2.png", "compressed_page2.jpeg", quality)
+
+            time.sleep(random.randint(1, 2))
+
+            create_pdf(
+                ["compressed_home.jpeg", "compressed_page1.jpeg", "compressed_page2.jpeg"],
+                file_name,
+                html_file_directory,
+                width=width,
+                height=height,
+            )
+
+            remove_files(
+                ["home.png", "page1.png", "page2.png", "compressed_home.jpeg", "compressed_page1.jpeg", "compressed_page2.jpeg"]
+            )
+
+            time.sleep(random.randint(1, 2))
+
+            new_file_name = "Home.html"
+            output_zip_path = os.path.join(html_file_directory, file_name + ".zip")
+
+            compress_file_and_folder(html_file_path, new_file_name, output_zip_path)
+
+            time.sleep(random.randint(1, 2))
+
+            download_image_and_remove_background(
+                file_name, html_file_directory, remove_text, driver
+            )
 
     except Exception as e:
         logging.error(f"Error durante el procesamiento: {e}")
-        # finalize(driver, service)
         raise
 
 
@@ -306,22 +406,38 @@ def take_screenshot(driver, file_name, window_size):
         raise
 
 
-def select_html_file():
+# def select_html_file():
+#     try:
+#         root = Tk()
+#         root.withdraw()
+#         file_path = filedialog.askopenfilename(filetypes=[("Archivos HTML", "*.html")])
+#         if not file_path:
+#             print(" - Selección de archivo cancelada.")
+#             logging.warning("Selección de archivo cancelada.")
+#         else:
+#             print(f" - Archivo seleccionado: {file_path}")
+#         return file_path
+#     except Exception as e:
+#         print(f" - Error al seleccionar el archivo HTML: {e}")
+#         logging.error(f"Error al seleccionar el archivo HTML: {e}")
+#         raise
+
+
+def select_folder():
     try:
         root = Tk()
         root.withdraw()
-        file_path = filedialog.askopenfilename(filetypes=[("Archivos HTML", "*.html")])
-        if not file_path:
-            print(" - Selección de archivo cancelada.")
-            logging.warning("Selección de archivo cancelada.")
+        folder_path = filedialog.askdirectory()
+        if not folder_path:
+            print(" - Selección de carpeta cancelada.")
+            logging.warning("Selección de carpeta cancelada.")
         else:
-            print(f" - Archivo seleccionado: {file_path}")
-        return file_path
+            print(f" - Carpeta seleccionada: {folder_path}")
+        return folder_path
     except Exception as e:
-        print(f" - Error al seleccionar el archivo HTML: {e}")
-        logging.error(f"Error al seleccionar el archivo HTML: {e}")
+        print(f" - Error al seleccionar la carpeta: {e}")
+        logging.error(f"Error al seleccionar la carpeta: {e}")
         raise
-
 
 def compress_image(image_path, output_path, quality):
     try:
@@ -438,7 +554,6 @@ def download_image_and_remove_background(
         file_name_lower = file_name.lower()
         remove_text_lower = remove_text.lower()
         search_text = file_name_lower.replace(remove_text_lower, "")
-        img_text = file_name.replace(remove_text, "")
 
         search_box.send_keys(search_text + Keys.RETURN)
         logging.info("Busqueda completada.")
@@ -497,7 +612,7 @@ def download_image_and_remove_background(
 
         img_no_bg = remove(img)
 
-        no_bg_image_path = os.path.join(save_directory, img_text + ".png")
+        no_bg_image_path = os.path.join(save_directory, file_name + ".png")
         img_no_bg.save(no_bg_image_path)
 
         print(f" - Imagen guardada en {no_bg_image_path}")
@@ -514,6 +629,7 @@ if __name__ == "__main__":
     width = int(configs.get("width"))
     height = int(configs.get("height"))
     quality = int(configs.get("quality"))
+    extensions_path = str(configs.get("extensions_path"))
 
     base_temp_dir = str(configs.get("base_temp_dir"))
     chromedrive_url = str(configs.get("chromedrive_url"))
@@ -524,8 +640,6 @@ if __name__ == "__main__":
 
     remove_text = str(configs.get("remove_text"))
 
-    extensions_path = configs.get("extensions_path")
-    
     configure_logging()
 
     while True:
@@ -539,7 +653,6 @@ if __name__ == "__main__":
                 extract_dir,
                 sub_dir_name,
                 executable_name,
-                extensions_path
             )
             html_file_path = initialize(driver)
             process(driver, html_file_path, width, height, quality, remove_text)
