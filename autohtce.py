@@ -122,7 +122,7 @@ def setup(
 def initialize(driver):
     try:
         logging.info("Seleccionando la carpeta principal.")
-        print(" - Por favor, selecciona la carpeta principal (ej: diagramas).")
+        print(" - Por favor, selecciona la carpeta principal.")
 
         main_folder_path = select_folder()
 
@@ -132,7 +132,8 @@ def initialize(driver):
             subdir_path = os.path.join(main_folder_path, subdir)
 
             files_in_subdir = [
-                os.path.join(subdir_path, f) for f in os.listdir(subdir_path) 
+                os.path.join(subdir_path, f)
+                for f in os.listdir(subdir_path)
                 if f.endswith(".html") and os.path.isfile(os.path.join(subdir_path, f))
             ]
 
@@ -150,7 +151,7 @@ def initialize(driver):
     except Exception as e:
         logging.error(f"Error durante la inicialización: {e}")
         raise
-    
+
 
 # def process(driver, html_file_path, width, height, quality, remove_text):
 #     try:
@@ -235,7 +236,16 @@ def initialize(driver):
 #         raise
 
 
-def process(driver, html_files, width, height, quality, remove_text):
+def process(
+    driver,
+    html_files,
+    width,
+    height,
+    quality,
+    remove_text,
+    color_options_1,
+    color_options_2,
+):
     try:
         logging.info("Iniciando la captura automática.")
         print(" - Iniciando la captura automática.")
@@ -243,7 +253,7 @@ def process(driver, html_files, width, height, quality, remove_text):
         for html_file_path in html_files:
             logging.info(f"Procesando archivo HTML: {html_file_path}")
             print(f" - Procesando archivo HTML: {html_file_path}")
-            
+
             driver.get(f"file://{html_file_path}")
             time.sleep(2)
 
@@ -275,7 +285,11 @@ def process(driver, html_files, width, height, quality, remove_text):
             time.sleep(random.randint(1, 2))
 
             create_pdf(
-                ["compressed_home.jpeg", "compressed_page1.jpeg", "compressed_page2.jpeg"],
+                [
+                    "compressed_home.jpeg",
+                    "compressed_page1.jpeg",
+                    "compressed_page2.jpeg",
+                ],
                 file_name,
                 html_file_directory,
                 width=width,
@@ -283,7 +297,14 @@ def process(driver, html_files, width, height, quality, remove_text):
             )
 
             remove_files(
-                ["home.png", "page1.png", "page2.png", "compressed_home.jpeg", "compressed_page1.jpeg", "compressed_page2.jpeg"]
+                [
+                    "home.png",
+                    "page1.png",
+                    "page2.png",
+                    "compressed_home.jpeg",
+                    "compressed_page1.jpeg",
+                    "compressed_page2.jpeg",
+                ]
             )
 
             time.sleep(random.randint(1, 2))
@@ -296,7 +317,12 @@ def process(driver, html_files, width, height, quality, remove_text):
             time.sleep(random.randint(1, 2))
 
             download_image_and_remove_background(
-                file_name, html_file_directory, remove_text, driver
+                file_name,
+                html_file_directory,
+                remove_text,
+                driver,
+                color_options_1,
+                color_options_2,
             )
 
     except Exception as e:
@@ -439,6 +465,7 @@ def select_folder():
         logging.error(f"Error al seleccionar la carpeta: {e}")
         raise
 
+
 def compress_image(image_path, output_path, quality):
     try:
         image = Image.open(image_path)
@@ -542,7 +569,7 @@ def compress_file_and_folder(html_file_path, new_file_name, output_zip_path):
 
 
 def download_image_and_remove_background(
-    file_name, save_directory, remove_text, driver
+    file_name, save_directory, remove_text, driver, color_options_1, color_options_2
 ):
     try:
         url = "https://www.google.com/imghp"
@@ -560,6 +587,8 @@ def download_image_and_remove_background(
         print(" - Busqueda completada.")
 
         time.sleep(random.uniform(2, 3))
+
+        select_color(driver, color_options_1, color_options_2)
 
         WebDriverWait(driver, 10).until(
             EC.presence_of_all_elements_located(
@@ -588,7 +617,7 @@ def download_image_and_remove_background(
                 return
         else:
             print(
-                "No se encontraron imágenes con solo la clase 'YQ4gaf' dentro del div especificado."
+                " - No se encontraron imágenes con solo la clase 'YQ4gaf' dentro del div especificado."
             )
             return
 
@@ -624,6 +653,101 @@ def download_image_and_remove_background(
         raise
 
 
+# def select_color(option, driver):
+#     try:
+#         logging.info("Iniciando selección de color...")
+
+#         tools = WebDriverWait(driver, 10).until(
+#             EC.element_to_be_clickable((By.ID, "hdtb-tls"))
+#         )
+#         tools.click()
+
+#         color_elements = WebDriverWait(driver, 10).until(
+#             EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.KTBKoe"))
+#         )
+#         color_elements[1].click()
+
+#         logging.info(" - Menú de herramientas desplegado.")
+#         print(" - Menú de herramientas desplegado.")
+
+#         menu = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "g-menu[jsname='xl07Ob']")))
+#         menu.click()
+
+#         options = driver.find_elements(By.CSS_SELECTOR, 'div.YpcDnf.OSrXXb.HG1dvd a')
+
+#         options[option].click()
+
+#     except Exception as e:
+#         logging.error(f"Error general: {str(e)}")
+#         print(f" - Error general: {str(e)}")
+#         finalize(driver, service)
+#         raise
+
+
+def select_color(driver, color_options_1, color_options_2):
+    try:
+
+        while True:
+            try:
+                color_number = int(
+                    input(
+                        f"Ingrese el numero del color (0 - {color_options_1}, 1 - {color_options_2}): "
+                    )
+                )
+                if color_number in [0, 1]:
+                    break
+                else:
+                    print("Por favor, ingrese un número válido (0 o 1).")
+            except ValueError:
+                print("Entrada no válida. Por favor, ingrese un número.")
+
+        logging.info("Iniciando selección de color...")
+
+        # Espera hasta que el menú de herramientas esté disponible y haz clic
+        tools = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "hdtb-tls"))
+        )
+        tools.click()
+        logging.info(" - Menú de herramientas desplegado.")
+        print(" - Menú de herramientas desplegado.")
+
+        # Espera hasta que los elementos de color estén disponibles y selecciona el segundo elemento
+        color_elements = WebDriverWait(driver, 10).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.KTBKoe"))
+        )
+        color_elements[1].click()
+
+        # Define las opciones de color
+        color_options = {
+            0: f'//g-menu-item[@jsname="NNJLud"]//a[text()="{color_options_1}"]',
+            1: f'//g-menu-item[@jsname="NNJLud"]//a[text()="{color_options_2}"]',
+        }
+
+        # Selección del color basado en la entrada del usuario
+        if color_number in color_options:
+            try:
+                menu_item = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, color_options[color_number]))
+                )
+                menu_item.click()
+                logging.info(f" - Color seleccionado: {color_options[color_number]}.")
+                print(
+                    f" - Color seleccionado exitosamente: {color_options[color_number]}."
+                )
+            except Exception as e:
+                logging.error(f" - Error al seleccionar el color: {e}")
+                print(" - Error al seleccionar el color.")
+        else:
+            logging.error(" - Opción de color no válida.")
+            print(" - Opción de color no válida.")
+
+    except Exception as e:
+        logging.error(f"Error general: {str(e)}")
+        print(f" - Error general: {str(e)}")
+        finalize(driver, service)
+        raise
+
+
 if __name__ == "__main__":
     configs = get_configs()
     width = int(configs.get("width"))
@@ -640,6 +764,9 @@ if __name__ == "__main__":
 
     remove_text = str(configs.get("remove_text"))
 
+    color_options_1 = str(configs.get("color_options_1"))
+    color_options_2 = str(configs.get("color_options_2"))
+
     configure_logging()
 
     while True:
@@ -655,7 +782,7 @@ if __name__ == "__main__":
                 executable_name,
             )
             html_file_path = initialize(driver)
-            process(driver, html_file_path, width, height, quality, remove_text)
+            process(driver, html_file_path, width, height, quality, remove_text, color_options_1, color_options_2)
         except Exception as e:
             logging.error(f"Error general: {e}")
             finalize(driver, service)

@@ -18,3 +18,7 @@ remove_text = Manual de Taller
 
 # extensions
 extensions_path = C:\Users\zynti\AppData\Local\Google\Chrome\User Data\Default\Extensions\cdopjfddjlonogibjahpnmjpoangjfff\3.0.0_0
+
+# options
+color_options_1 = En blanco y negro
+color_options_2 = Transparentes
