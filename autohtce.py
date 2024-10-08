@@ -580,6 +580,7 @@ def download_image_and_remove_background(
 
         file_name_lower = file_name.lower()
         remove_text_lower = remove_text.lower()
+        remove_text_file_name = file_name.replace(remove_text, "")
         search_text = file_name_lower.replace(remove_text_lower, "")
 
         search_box.send_keys(search_text + Keys.RETURN)
@@ -641,7 +642,7 @@ def download_image_and_remove_background(
 
         img_no_bg = remove(img)
 
-        no_bg_image_path = os.path.join(save_directory, file_name + ".png")
+        no_bg_image_path = os.path.join(save_directory, remove_text_file_name + ".png")
         img_no_bg.save(no_bg_image_path)
 
         print(f" - Imagen guardada en {no_bg_image_path}")
@@ -686,24 +687,8 @@ def download_image_and_remove_background(
 
 def select_color(driver, color_options_1, color_options_2):
     try:
-
-        while True:
-            try:
-                color_number = int(
-                    input(
-                        f"Ingrese el numero del color (0 - {color_options_1}, 1 - {color_options_2}): "
-                    )
-                )
-                if color_number in [0, 1]:
-                    break
-                else:
-                    print("Por favor, ingrese un número válido (0 o 1).")
-            except ValueError:
-                print("Entrada no válida. Por favor, ingrese un número.")
-
         logging.info("Iniciando selección de color...")
 
-        # Espera hasta que el menú de herramientas esté disponible y haz clic
         tools = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "hdtb-tls"))
         )
@@ -711,35 +696,91 @@ def select_color(driver, color_options_1, color_options_2):
         logging.info(" - Menú de herramientas desplegado.")
         print(" - Menú de herramientas desplegado.")
 
-        # Espera hasta que los elementos de color estén disponibles y selecciona el segundo elemento
         color_elements = WebDriverWait(driver, 10).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.KTBKoe"))
         )
         color_elements[1].click()
 
-        # Define las opciones de color
-        color_options = {
-            0: f'//g-menu-item[@jsname="NNJLud"]//a[text()="{color_options_1}"]',
-            1: f'//g-menu-item[@jsname="NNJLud"]//a[text()="{color_options_2}"]',
-        }
+        while True:
 
-        # Selección del color basado en la entrada del usuario
-        if color_number in color_options:
-            try:
-                menu_item = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, color_options[color_number]))
-                )
-                menu_item.click()
-                logging.info(f" - Color seleccionado: {color_options[color_number]}.")
-                print(
-                    f" - Color seleccionado exitosamente: {color_options[color_number]}."
-                )
-            except Exception as e:
-                logging.error(f" - Error al seleccionar el color: {e}")
-                print(" - Error al seleccionar el color.")
-        else:
-            logging.error(" - Opción de color no válida.")
-            print(" - Opción de color no válida.")
+            while True:
+                try:
+                    color_number = int(
+                        input(
+                            f"Ingrese el número del color (0 - No seleccionar, 1 - {color_options_1}, 2 - {color_options_2}): "
+                        )
+                    )
+                    if color_number in [0, 1, 2]:
+                        break
+                    else:
+                        print("Por favor, ingrese un número válido (0, 1, 2).")
+                except ValueError:
+                    print("Entrada no válida. Por favor, ingrese un número.")
+
+            if color_number == 0:
+                return
+
+            # logging.info("Iniciando selección de color...")
+
+            # tools = WebDriverWait(driver, 10).until(
+            #     EC.element_to_be_clickable((By.ID, "hdtb-tls"))
+            # )
+            # tools.click()
+            # logging.info(" - Menú de herramientas desplegado.")
+            # print(" - Menú de herramientas desplegado.")
+
+            # color_elements = WebDriverWait(driver, 10).until(
+            #     EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.KTBKoe"))
+            # )
+            # color_elements[1].click()
+
+            color_options = {
+                1: f'//g-menu-item[@jsname="NNJLud"]//a[text()="{color_options_1}"]',
+                2: f'//g-menu-item[@jsname="NNJLud"]//a[text()="{color_options_2}"]',
+            }
+
+            if color_number in color_options:
+                try:
+                    menu_item = WebDriverWait(driver, 10).until(
+                        EC.element_to_be_clickable(
+                            (By.XPATH, color_options[color_number])
+                        )
+                    )
+                    menu_item.click()
+                    logging.info(
+                        f" - Color seleccionado: {color_options[color_number]}."
+                    )
+                    print(
+                        f" - Color seleccionado exitosamente: {color_options[color_number]}."
+                    )
+                except Exception as e:
+                    logging.error(f" - Error al seleccionar el color: {e}")
+                    print(f" - Error al seleccionar el color: {e}")
+            else:
+                logging.error(" - Opción de color no válida.")
+                print(" - Opción de color no válida.")
+
+            while True:
+                try:
+                    navigate_back = int(
+                        input("¿volver a elegir el color? (1 - Sí, 2 - No): ")
+                    )
+                    if navigate_back in [1, 2]:
+                        break
+                    else:
+                        print("Por favor, ingrese un número válido (1 - Sí, 2 - No).")
+                except ValueError:
+                    print("Entrada no válida. Por favor, ingrese un número.")
+
+            if navigate_back == 1:
+                driver.back()
+                print(" - Pagina atras. Volviendo a la selección de color.")
+                logging.info(" - Pagina atras. Volviendo a la selección de color.")
+                continue
+            else:
+                print(" - Continuando sin retroceder.")
+                logging.info(" - Continuando sin retroceder.")
+                break
 
     except Exception as e:
         logging.error(f"Error general: {str(e)}")
@@ -782,7 +823,16 @@ if __name__ == "__main__":
                 executable_name,
             )
             html_file_path = initialize(driver)
-            process(driver, html_file_path, width, height, quality, remove_text, color_options_1, color_options_2)
+            process(
+                driver,
+                html_file_path,
+                width,
+                height,
+                quality,
+                remove_text,
+                color_options_1,
+                color_options_2,
+            )
         except Exception as e:
             logging.error(f"Error general: {e}")
             finalize(driver, service)

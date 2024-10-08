@@ -21,4 +21,4 @@ extensions_path = C:\Users\zynti\AppData\Local\Google\Chrome\User Data\Default\E
 
 # options
 color_options_1 = En blanco y negro
-color_options_2 = Transparentes
+color_options_2 = Transparente
